@@ -1,0 +1,22 @@
+{
+  "features": [
+    {
+      "id": "find",
+      "title": "Find Your Dream Job",
+      "description": "Browse thousands of job listings from top companies and filter by role, location, and salary.",
+      "icon": "M5 12hM19 12\\nM12 5l7 7-7 7"
+    },
+    {
+      "id": "connect",
+      "title": "Connect with Recruiters",
+      "description": "Direct messaging with recruiters and hiring managers to stand out from the crowd.",
+      "icon": "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z\\nM8 2v2h2v2H8v2h2v4H6v-4H4v2h4v-2H4v-4h2z"
+    },
+    {
+      "id": "interview",
+      "title": "Ace Your Interview",
+      "description": "Get access to interview questions, company reviews, and coaching resources.",
+      "icon": "Mcircle cx=12 cy=12 r=10\\nM8 14s1.5 2 4 2 4-2 4-2\\nM9 9h.01\\nM15 9h.01"
+    }
+  ]
+}
