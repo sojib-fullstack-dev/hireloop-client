@@ -69,7 +69,7 @@ export function Navbar() {
           </Link>
 
           <Link
-            href="/get-started"
+            href="/sign-up"
             className={cn(
               buttonVariants({ size: "lg" }),
               "h-10 rounded-lg bg-[#6c5dfc] px-5 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.08)_inset] hover:bg-[#7d70ff] focus-visible-ring-[#6c5dfc]/50"
@@ -157,7 +157,7 @@ export function Navbar() {
               </SheetClose>
 
               <SheetClose
-                render={<Link href="/get-started" />}
+                render={<Link href="/sign-up" />}
                 className={cn(
                   buttonVariants({ size: "lg" }),
                   "h-10 w-full bg-[#6c5dfc] text-sm font-semibold text-white hover:bg-[#7d70ff]"
