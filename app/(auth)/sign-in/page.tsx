@@ -7,19 +7,33 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   Sparkles,
+  Eye,
+  EyeOff,
 } from "lucide-react"
+
+import { FcGoogle } from "react-icons/fc";
+import { authClient } from "@/lib/auth-client";
 
 export default function SignInPage() {
   const [message, setMessage] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+ async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const formData = new FormData(event.currentTarget)
     const data = Object.fromEntries(formData.entries())
+           
+    const { data:fromData, error } = await authClient.signIn.email({
+   email:data.email as string, 
+    password:data.password as string, 
+    rememberMe: true,
+    callbackURL: "/", 
+        });
 
     console.log("Sign-in form data:", data)
-    setMessage("Your sign-in information was collected.")
+    console.log("Sign-in form Response:", fromData, error)
+    // setMessage("Your sign-in information was collected.")
   }
 
   return (
@@ -108,7 +122,7 @@ export default function SignInPage() {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <label
                 htmlFor="password"
                 className="text-sm font-medium text-[#e4e4e7]"
@@ -123,8 +137,11 @@ export default function SignInPage() {
                 name="password"
                 placeholder="At least 8 characters"
                 required
-                type="password"
+                type={showPassword ? "text" : "password"}
               />
+              <button type="button" onClick={() => setShowPassword((prev) => !prev)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#888] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#6c5dfc]/15 focus:ring-offset-2" aria-label={showPassword ? "Hide password" : "Show password"}>
+                {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+              </button>
             </div>
 
             <div className="flex items-center justify-between gap-4 pt-0.5">
@@ -155,7 +172,19 @@ export default function SignInPage() {
               Sign in
               <ArrowRight className="size-4" aria-hidden="true" />
             </button>
+
+                      <div className="mt-4">
+            <button
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#6c5dfc] px-5 text-sm font-semibold text-white transition hover:bg-[#7d70ff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a9a0ff]"
+              type="button"
+            >
+              <FcGoogle className="size-4" aria-hidden="true"/>
+              Continue with Google
+            </button>
+          </div>
           </form>
+
+
 
           <p className="mt-7 text-center text-sm text-[#a1a1aa]">
             New to Hireloop?{" "}

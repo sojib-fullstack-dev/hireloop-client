@@ -2,29 +2,47 @@
 
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ArrowRight,
   BriefcaseBusiness,
   CheckCircle2,
+  Eye,
+  EyeOff,
   Sparkles,
+  User,
 } from "lucide-react"
+import { FcGoogle } from "react-icons/fc"
+import { authClient } from "@/lib/auth-client"
 
 export default function SignUpPage() {
-  const [message, setMessage] = useState("")
+  // const [message, setMessage] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [role, setRole] = useState<'seeker' | 'recruiter' | 'admin'>('seeker')
+  const router = useRouter()
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+ async function handleSubmit (event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const formData = new FormData(event.currentTarget)
     const data = Object.fromEntries(formData.entries())
 
-    if (data.password !== data.confirmPassword) {
-      setMessage("Your passwords do not match.")
+
+    const { error } = await authClient.signUp.email({
+    name:data.name as string, 
+    email:data.email as string, 
+    password:data.password as string, 
+    callbackURL: "/",
+    role:role ,
+  });
+
+    if (error) {
+      console.error("Sign-up failed:", error)
       return
     }
 
+    router.replace("/")
     console.log("Sign-up form data:", data)
-    setMessage("Your sign-up information was collected.")
   }
 
   return (
@@ -88,15 +106,63 @@ export default function SignUpPage() {
               Create your account
             </h2>
             <p className="mt-2 text-sm leading-6 text-[#a1a1aa]">
-              Set up your account and get ready for what’s next.
+              Set up your account and get ready for what's next.
             </p>
           </div>
 
           <form
             className="space-y-5"
             onSubmit={handleSubmit}
-            onInput={() => setMessage("")}
+      
           >
+            <div className="mb-4">
+              <p className="text-sm font-medium text-[#e4e4e7] mb-2">Role</p>
+              <div className="flex gap-4">
+                <label
+                  className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-sm font-medium transition hover:border-[#8175ff] focus:outline-none focus:ring-2 focus:ring-[#6c5dfc]/15"
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="seeker"
+                    checked={role === 'seeker'}
+                    onChange={() => setRole('seeker')}
+                    className="size-4 accent-[#6c5dfc]"
+                  />
+                  <User className="size-3.5" aria-hidden="true" />
+                  Seeker
+                </label>
+                <label
+                  className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-sm font-medium transition hover:border-[#8175ff] focus:outline-none focus:ring-2 focus:ring-[#6c5dfc]/15"
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="recruiter"
+                    checked={role === 'recruiter'}
+                    onChange={() => setRole('recruiter')}
+                    className="size-4 accent-[#6c5dfc]"
+                  />
+                  <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
+                  Recruiter
+                </label>
+                <label
+                  className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-1.5 text-sm font-medium transition hover:border-[#8175ff] focus:outline-none focus:ring-2 focus:ring-[#6c5dfc]/15"
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="admin"
+                    checked={role === 'admin'}
+                    onChange={() => setRole('admin')}
+                    className="size-4 accent-[#6c5dfc]"
+                  />
+                  <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                  Admin
+                </label>
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="name"
@@ -132,7 +198,7 @@ export default function SignUpPage() {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <label
                 htmlFor="password"
                 className="text-sm font-medium text-[#e4e4e7]"
@@ -147,29 +213,18 @@ export default function SignUpPage() {
                 name="password"
                 placeholder="At least 8 characters"
                 required
-                type="password"
+                type={showPassword ? "text" : "password"}
               />
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="text-sm font-medium text-[#e4e4e7]"
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#888] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#6c5dfc]/15 focus:ring-offset-2"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                Confirm password
-              </label>
-              <input
-                autoComplete="new-password"
-                className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-[#0b0b0d] px-4 text-sm text-white outline-none transition placeholder:text-[#777780] focus:border-[#8175ff] focus:ring-4 focus:ring-[#6c5dfc]/15"
-                id="confirmPassword"
-                minLength={8}
-                name="confirmPassword"
-                placeholder="Enter your password again"
-                required
-                type="password"
-              />
+                {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+              </button>
             </div>
-
+{/* 
             {message && (
               <p
                 aria-live="polite"
@@ -188,6 +243,25 @@ export default function SignUpPage() {
               </p>
             )}
 
+
+            {message && (
+              <p
+                aria-live="polite"
+                className={
+                  message === "Your passwords do not match."
+                    ? "rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-200"
+                    : "rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm leading-6 text-emerald-200"
+                }
+                role={
+                  message === "Your passwords do not match."
+                    ? "alert"
+                    : "status"
+                }
+              >
+                {message}
+              </p>
+            )} */}
+
             <button
               className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#6c5dfc] px-5 text-sm font-semibold text-white transition hover:bg-[#7d70ff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a9a0ff]"
               type="submit"
@@ -195,7 +269,17 @@ export default function SignUpPage() {
               Create account
               <ArrowRight className="size-4" aria-hidden="true" />
             </button>
-          </form>
+           </form>
+
+           <div className="mt-4">
+            <button
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#6c5dfc] px-5 text-sm font-semibold text-white transition hover:bg-[#7d70ff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a9a0ff]"
+              type="button"
+            >
+               <FcGoogle className="size-4" aria-hidden="true"/>
+              Continue with Google
+            </button>
+          </div>
 
           <p className="mt-7 text-center text-sm text-[#a1a1aa]">
             Already have an account?{" "}

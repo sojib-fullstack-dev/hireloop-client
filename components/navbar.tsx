@@ -15,6 +15,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
+import { authClient } from "@/lib/auth-client"
+
 
 const navLinks = [
   { label: "Browse Jobs", href: "/jobs", active: false },
@@ -23,13 +25,27 @@ const navLinks = [
 ]
 
 export function Navbar() {
+  // const router=useRouter()
+  const { data: session, isPending } = authClient.useSession()
+
+  if (isPending) {
+    return <span className="text-xl text-white">Loading...</span>
+  }
+  // console.log("user data", session)
+  const handleSignOut = async () => {
+    const { error } = await authClient.signOut()
+    if (error) {
+      console.error("Sign-out failed:", error)
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#08080a]">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           aria-label="Hireloop home"
-          className="shrink-0 outline-none focus-visible:ring-2 focus-visible-ring-[#6c5dfc]/60"
+          className="focus-visible-ring-[#6c5dfc]/60 shrink-0 outline-none focus-visible:ring-2"
         >
           <Image
             src={logo}
@@ -48,7 +64,7 @@ export function Navbar() {
                 href={link.href}
                 aria-current={link.active ? "page" : undefined}
                 className={cn(
-                  "rounded-lg px-3 py-2 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible-ring-[#6c5dfc]/60",
+                  "focus-visible-ring-[#6c5dfc]/60 rounded-lg px-3 py-2 text-sm transition-colors outline-none focus-visible:ring-2",
                   link.active
                     ? "font-semibold text-white"
                     : "font-medium text-[#a1a1a6] hover:text-white"
@@ -60,23 +76,44 @@ export function Navbar() {
           </nav>
 
           <span aria-hidden="true" className="mx-2 h-6 w-px bg-white/10" />
+          <div>
+            {session?.user ? (
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#8175ff]/25 bg-[#6c5dfc]/10 px-3 py-1 text-xs font-medium text-[#c5bfff]">
+                  Welcome,{" "}
+                  <strong className="font-semibold text-white">
+                    {session?.user?.name}
+                  </strong>
+                </span>
 
-          <Link
-            href="/sign-in"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-[#a7a5c0] transition-colors outline-none hover:text-white focus-visible:ring-2 focus-visible-ring-[#6c5dfc]/60"
-          >
-            Sign In
-          </Link>
+                <Button
+                  onClick={handleSignOut}
+                  className="focus-visible-ring-[#6c5dfc]/60 rounded-lg px-3 py-2 text-sm font-medium text-[#a7a5c0] transition-colors outline-none hover:text-white focus-visible:ring-2"
+                >
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="focus-visible-ring-[#6c5dfc]/60 rounded-lg px-3 py-2 text-sm font-medium text-[#a7a5c0] transition-colors outline-none hover:text-white focus-visible:ring-2"
+                >
+                  Sign In
+                </Link>
 
-          <Link
-            href="/sign-up"
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "h-10 rounded-lg bg-[#6c5dfc] px-5 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.08)_inset] hover:bg-[#7d70ff] focus-visible-ring-[#6c5dfc]/50"
+                <Link
+                  href="/sign-up"
+                  className={cn(
+                    buttonVariants({ size: "lg" }),
+                    "focus-visible-ring-[#6c5dfc]/50 h-10 rounded-lg bg-[#6c5dfc] px-5 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.08)_inset] hover:bg-[#7d70ff]"
+                  )}
+                >
+                  Get Started
+                </Link>
+              </>
             )}
-          >
-            Get Started
-          </Link>
+          </div>
         </div>
 
         {/* Mobile navigation */}
