@@ -18,11 +18,7 @@ import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
 
 
-const navLinks = [
-  { label: "Browse Jobs", href: "/jobs", active: false },
-  { label: "Company", href: "/company", active: false },
-  { label: "Pricing", href: "/pricing", active: false },
-]
+
 
 export function Navbar() {
   // const router=useRouter()
@@ -38,6 +34,13 @@ export function Navbar() {
       console.error("Sign-out failed:", error)
     }
   }
+
+  const navLinks = [
+  { label: "Browse Jobs", href: "/jobs", active: false },
+  { label: "Company", href: "/company", active: false },
+  { label: "Pricing", href: "/pricing", active: false },
+  { label: "Dashboard", href: `/dashbord/${session?.user.role || 'seeker'}` },
+]
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#08080a]">
@@ -56,7 +59,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop navigation */}
-        <div className="hidden items-center gap-1 rounded-xl bg-[#141416] p-1.5 lg:flex">
+        <div className="hidden items-center gap-1 rounded-xl bg-[#27272b] p-1.5 lg:flex">
           <nav aria-label="Main" className="flex items-center">
             {navLinks.map((link) => (
               <Link
