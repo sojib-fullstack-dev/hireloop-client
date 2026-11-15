@@ -18,47 +18,13 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { createJobs } from "@/lib/actions/jobs"
-
-const categories = [
-  "Engineering & Tech",
-  "Design",
-  "Product",
-  "Marketing",
-  "Sales",
-  "Finance",
-  "Other",
-]
-
-const jobTypes = ["Full-time", "Part-time", "Contract", "Internship"]
-const frequencies = ["per hour", "per month", "per year"]
-
-export type JobForm = {
-  title: string
-  company: string
-  category: string
-  jobType: string
-  location: string
-  deadline: string
-  minSalary: string
-  maxSalary: string
-  frequency: string
-  responsibilities: string
-  qualifications: string
-}
-
-const initialForm: JobForm = {
-  title: "",
-  company: "",
-  category: "Engineering & Tech",
-  jobType: "Full-time",
-  location: "",
-  deadline: "",
-  minSalary: "",
-  maxSalary: "",
-  frequency: "per hour",
-  responsibilities: "",
-  qualifications: "",
-}
+import {
+  categories,
+  frequencies,
+  initialJobForm,
+  jobTypes,
+  type JobForm,
+} from "@/app/dashbord/recruiter/jobs/job-data"
 
 // Shared styles so every input looks the same.
 const inputClass =
@@ -77,8 +43,7 @@ const iconClass =
   "pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-500"
 
 const NewJobPage = () => {
-  const [formData, setFormData] = useState(initialForm)
-  const [remote, setRemote] = useState(true)
+  const [formData, setFormData] = useState<JobForm>(initialJobForm)
   const [submitted, setSubmitted] = useState(false)
 
   function handleChange(
@@ -90,11 +55,8 @@ const NewJobPage = () => {
     setFormData({ ...formData, [field]: event.target.value })
   }
 
- async function handleSubmit (event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-
-    const newJob = { ...formData, remote }
-    // console.log("New job post:", newJob)
 
     setSubmitted(true)
 
@@ -102,9 +64,8 @@ const NewJobPage = () => {
     // from the bottom of the form.
     window.scrollTo({ top: 0, behavior: "smooth" })
 
-    const result= await createJobs(newJob)
-    console.log('submit data',result)
-
+    const result = await createJobs(formData)
+    console.log("submit data", result)
   }
 
   return (
@@ -250,8 +211,10 @@ const NewJobPage = () => {
               </p>
             </div>
             <Switch
-              checked={remote}
-              onCheckedChange={setRemote}
+              checked={formData.remote}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, remote: checked })
+              }
               aria-label="Remote work allowed"
               className="data-checked:bg-[#7c5cfc] data-unchecked:bg-white/20"
             />

@@ -3,7 +3,7 @@
 const RecruiterDashbordPage = () => {
   return (
     <div>
-      <p>Hello</p>
+      <p className="text-6xl text-amber-100 min-h-screen flex items-center justify-center">Hello</p>
     </div>
   );
 };

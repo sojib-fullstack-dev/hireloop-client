@@ -51,7 +51,7 @@ const DashbordSideBar = () => {
                   <SidebarMenuButton
                     isActive={pathname === item.url}
                     render={<Link href={item.url} />}
-                    className="text-zinc-400 data-active:bg-white/10 data-active:text-white"
+                    className="text-zinc-400 data-active:bg-white/10 data-active:text-blue-400"
                   >
                     <item.icon />
                     <span>{item.name}</span>
