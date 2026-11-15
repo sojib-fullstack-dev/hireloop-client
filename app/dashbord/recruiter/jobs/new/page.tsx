@@ -25,6 +25,8 @@ import {
   jobTypes,
   type JobForm,
 } from "@/app/dashbord/recruiter/jobs/job-data"
+import { toast } from "react-toastify"
+
 
 // Shared styles so every input looks the same.
 const inputClass =
@@ -63,7 +65,7 @@ const NewJobPage = () => {
     // Bring the confirmation message into view for users who submitted
     // from the bottom of the form.
     window.scrollTo({ top: 0, behavior: "smooth" })
-
+    toast.success('Job Post Successfully')
     const result = await createJobs(formData)
     console.log("submit data", result)
   }

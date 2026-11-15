@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState, type ChangeEvent } from "react"
+import { useEffect, useMemo, useState, type ChangeEvent } from "react"
 import {
   BriefcaseBusinessIcon,
   ChevronRightIcon,
@@ -14,19 +14,11 @@ import {
 import { cn } from "cn"
 
 import { Button, buttonVariants } from "@/components/ui/button"
-import { DeleteAction } from "@/app/components/manageAction/DeleteAction"
+import { AlertDialogDestructive } from "@/app/components/manageAction/DeleteAction"
 import { EditAction } from "@/app/components/manageAction/EditAction"
 import { ViewAction } from "@/app/components/manageAction/ViewAction"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { Switch } from "@/components/ui/switch"
 import {
   Table,
   TableBody,
@@ -35,87 +27,32 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
 import {
   categories,
-  dummyJobs,
+  formatDate,
+  formatSalary,
   getJobStatus,
-  initialJobForm,
-  jobTypes,
-  frequencies,
   type JobEntry,
-  type JobForm,
   type JobStatus,
 } from "@/app/dashbord/recruiter/jobs/job-data"
+import { getJobsdata } from "@/lib/api/job"
 
 type StatusFilter = "all" | JobStatus
 
-const monthNames = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-]
-
-// Format an ISO date (yyyy-mm-dd) without relying on the user's locale,
-// so the server and the browser always render the same text.
-function formatDate(value: string) {
-  if (!value) return "No deadline"
-
-  const [year, month, day] = value.split("-")
-  const monthName = monthNames[Number(month) - 1]
-
-  if (!year || !monthName || !day) return value
-
-  return `${monthName} ${Number(day)}, ${year}`
-}
-
-function formatMoney(value: string) {
-  if (!value) return ""
-
-  const amount = Number(value)
-  if (Number.isNaN(amount)) return value
-
-  return `$${amount.toLocaleString("en-US")}`
-}
-
-function formatSalary(job: JobEntry) {
-  const min = formatMoney(job.minSalary)
-  const max = formatMoney(job.maxSalary)
-
-  if (!min && !max) return "Negotiable"
-
-  const range = min && max ? `${min} – ${max}` : min || max
-  return `${range} ${job.frequency}`
-}
-
-const dialogInputClass =
-  "h-10 border-white/10 bg-[#141416] text-sm text-zinc-100 placeholder:text-zinc-500 focus-visible:border-[#7c5cfc] focus-visible:ring-[#7c5cfc]/30"
-
-const dialogSelectClass =
-  "w-full [&_select]:h-10 [&_select]:border-white/10 [&_select]:bg-[#141416] [&_select]:text-sm [&_select]:text-zinc-100 [&_select]:focus-visible:border-[#7c5cfc] [&_select]:focus-visible:ring-[#7c5cfc]/30"
-
-const dialogTextareaClass =
-  "min-h-20 border-white/10 bg-[#141416] text-sm text-zinc-100 placeholder:text-zinc-500 focus-visible:border-[#7c5cfc] focus-visible:ring-[#7c5cfc]/30"
-
-const dialogLabelClass = "text-xs font-medium text-zinc-400"
-
-const ManageJobs = () => {
-  const [jobs, setJobs] = useState(dummyJobs)
+const ManageJobs =() => {
+  const [jobs, setJobs] = useState<JobEntry[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("all")
   const [status, setStatus] = useState<StatusFilter>("all")
-  const [viewingJob, setViewingJob] = useState<JobEntry | null>(null)
-  const [editingJob, setEditingJob] = useState<JobEntry | null>(null)
-  const [editForm, setEditForm] = useState<JobForm>(initialJobForm)
+
+  // API theke jobs niye table e boshai.
+  useEffect(() => {
+    getJobsdata()
+      .then(setJobs)
+      .catch((err) => console.log("Failed to load jobs:", err))
+      .finally(() => setLoading(false))
+  }, [])
 
   const activeCount = jobs.filter(
     (job) => getJobStatus(job.deadline) === "Active"
@@ -148,41 +85,10 @@ const ManageJobs = () => {
     setStatus("all")
   }
 
-  function handleDelete(job: JobEntry) {
-    const confirmed = window.confirm(
-      `Delete "${job.title}"? This action cannot be undone.`
-    )
-
-    if (!confirmed) return
-
-    setJobs((current) => current.filter((item) => item.id !== job.id))
-  }
-
-  function startEdit(job: JobEntry) {
-    setEditingJob(job)
-    setEditForm({ ...job })
-  }
-
-  function handleEditChange(
-    event: ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) {
-    const field = event.target.name as keyof JobForm
-    setEditForm({ ...editForm, [field]: event.target.value })
-  }
-
-  function saveEdit() {
-    if (!editingJob) return
-
+  function updateJob(updatedJob: JobEntry) {
     setJobs((current) =>
-      current.map((job) =>
-        job.id === editingJob.id
-          ? { ...editForm, id: job.id, postedAt: job.postedAt }
-          : job
-      )
+      current.map((job) => (job._id === updatedJob._id ? updatedJob : job))
     )
-    setEditingJob(null)
   }
 
   const stats = [
@@ -217,8 +123,6 @@ const ManageJobs = () => {
     { label: "Active", value: "Active", count: activeCount },
     { label: "Closed", value: "Closed", count: closedCount },
   ]
-
-  const viewingStatus = viewingJob ? getJobStatus(viewingJob.deadline) : null
 
   return (
     <div className="px-4 py-8 text-zinc-100 sm:px-8">
@@ -349,11 +253,17 @@ const ManageJobs = () => {
           </div>
         </div>
 
-        <p className="mt-4 text-xs text-zinc-500">
-          Showing {filteredJobs.length} of {jobs.length} jobs
-        </p>
+        {!loading && jobs.length > 0 && (
+          <p className="mt-4 text-xs text-zinc-500">
+            Showing {filteredJobs.length} of {jobs.length} jobs
+          </p>
+        )}
 
-        {filteredJobs.length === 0 ? (
+        {loading ? (
+          <div className="mt-3 rounded-2xl border border-white/10 bg-[#101012] px-6 py-16 text-center text-sm text-zinc-500">
+            Loading jobs…
+          </div>
+        ) : filteredJobs.length === 0 ? (
           <div className="mt-3 rounded-2xl border border-dashed border-white/10 bg-[#101012] px-6 py-16 text-center">
             <BriefcaseBusinessIcon className="mx-auto size-8 text-zinc-600" />
             <p className="mt-3 text-sm font-medium text-zinc-300">
@@ -423,7 +333,7 @@ const ManageJobs = () => {
 
                     return (
                       <TableRow
-                        key={job.id}
+                        key={job._id}
                         className="border-white/5 hover:bg-white/[0.03]"
                       >
                         <TableCell className="px-4 py-3 whitespace-normal">
@@ -491,18 +401,9 @@ const ManageJobs = () => {
 
                         <TableCell className="px-4 py-3">
                           <div className="flex items-center justify-end gap-1">
-                            <ViewAction
-                              label={job.title}
-                              onClick={() => setViewingJob(job)}
-                            />
-                            <EditAction
-                              label={job.title}
-                              onClick={() => startEdit(job)}
-                            />
-                            <DeleteAction
-                              label={job.title}
-                              onClick={() => handleDelete(job)}
-                            />
+                            <ViewAction job={job} />
+                            <EditAction job={job} onSave={updateJob} />
+                            <AlertDialogDestructive job={job} />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -519,7 +420,7 @@ const ManageJobs = () => {
 
                 return (
                   <article
-                    key={job.id}
+                    key={job._id}
                     className="rounded-2xl border border-white/10 bg-[#101012] p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -587,21 +488,9 @@ const ManageJobs = () => {
                     </dl>
 
                     <div className="mt-4 flex items-center justify-end gap-1">
-                      <ViewAction
-                        label={job.title}
-                        showLabel
-                        onClick={() => setViewingJob(job)}
-                      />
-                      <EditAction
-                        label={job.title}
-                        showLabel
-                        onClick={() => startEdit(job)}
-                      />
-                      <DeleteAction
-                        label={job.title}
-                        showLabel
-                        onClick={() => handleDelete(job)}
-                      />
+                      <ViewAction job={job} showLabel />
+                      <EditAction job={job} showLabel onSave={updateJob} />
+                      <AlertDialogDestructive job={job} />
                     </div>
                   </article>
                 )
@@ -609,379 +498,7 @@ const ManageJobs = () => {
             </div>
           </>
         )}
-
-        <p className="mt-6 pb-8 text-center text-xs text-zinc-600">
-          Showing demo data. Jobs connect to the API once the backend is
-          running.
-        </p>
       </div>
-
-      {/* View job dialog */}
-      <Dialog
-        open={viewingJob !== null}
-        onOpenChange={(open) => {
-          if (!open) setViewingJob(null)
-        }}
-      >
-        <DialogContent className="max-h-[88svh] overflow-y-auto bg-[#121214] text-zinc-100 ring-white/10 sm:max-w-xl">
-          {viewingJob && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-lg font-semibold text-white">
-                  {viewingJob.title}
-                </DialogTitle>
-                <DialogDescription className="text-xs text-zinc-500">
-                  {viewingJob.company} · {viewingJob.location}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="flex flex-wrap gap-1.5">
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium",
-                    viewingStatus === "Active"
-                      ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
-                      : "border-white/10 bg-white/5 text-zinc-400"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "size-1.5 rounded-full",
-                      viewingStatus === "Active"
-                        ? "bg-emerald-400"
-                        : "bg-zinc-500"
-                    )}
-                  />
-                  {viewingStatus}
-                </span>
-                <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-zinc-300">
-                  {viewingJob.category}
-                </span>
-                <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-zinc-300">
-                  {viewingJob.jobType}
-                </span>
-                {viewingJob.remote && (
-                  <span className="rounded-full border border-[#7c5cfc]/30 bg-[#7c5cfc]/10 px-2 py-0.5 text-[11px] text-[#c4b5fd]">
-                    Remote
-                  </span>
-                )}
-              </div>
-
-              <dl className="grid gap-3 rounded-xl border border-white/10 bg-[#0e0e10] p-3 text-xs sm:grid-cols-2">
-                <div>
-                  <dt className="text-zinc-500">Salary</dt>
-                  <dd className="mt-0.5 text-zinc-200">
-                    {formatSalary(viewingJob)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-zinc-500">Location</dt>
-                  <dd className="mt-0.5 text-zinc-200">
-                    {viewingJob.location}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-zinc-500">Posted</dt>
-                  <dd className="mt-0.5 text-zinc-200">
-                    {formatDate(viewingJob.postedAt)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-zinc-500">Deadline</dt>
-                  <dd className="mt-0.5 text-zinc-200">
-                    {formatDate(viewingJob.deadline)}
-                  </dd>
-                </div>
-              </dl>
-
-              <div>
-                <h3 className="text-xs font-medium text-zinc-400">
-                  Key responsibilities
-                </h3>
-                <p className="mt-1 text-sm whitespace-pre-line text-zinc-300">
-                  {viewingJob.responsibilities || "Not provided."}
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xs font-medium text-zinc-400">
-                  Qualifications &amp; requirements
-                </h3>
-                <p className="mt-1 text-sm whitespace-pre-line text-zinc-300">
-                  {viewingJob.qualifications || "Not provided."}
-                </p>
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setViewingJob(null)}
-                  className="h-9 border-white/10 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-white"
-                >
-                  Close
-                </Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit job dialog */}
-      <Dialog
-        open={editingJob !== null}
-        onOpenChange={(open) => {
-          if (!open) setEditingJob(null)
-        }}
-      >
-        <DialogContent className="max-h-[88svh] overflow-y-auto bg-[#121214] text-zinc-100 ring-white/10 sm:max-w-2xl">
-          {editingJob && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-lg font-semibold text-white">
-                  Edit job
-                </DialogTitle>
-                <DialogDescription className="text-xs text-zinc-500">
-                  Update the listing details. Changes are saved to this table
-                  only.
-                </DialogDescription>
-              </DialogHeader>
-
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  saveEdit()
-                }}
-                className="space-y-4"
-              >
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor="edit-title" className={dialogLabelClass}>
-                      Job title
-                    </label>
-                    <Input
-                      id="edit-title"
-                      name="title"
-                      value={editForm.title}
-                      onChange={handleEditChange}
-                      required
-                      className={dialogInputClass}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="edit-company" className={dialogLabelClass}>
-                      Company
-                    </label>
-                    <Input
-                      id="edit-company"
-                      name="company"
-                      value={editForm.company}
-                      onChange={handleEditChange}
-                      required
-                      className={dialogInputClass}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="edit-category" className={dialogLabelClass}>
-                      Category
-                    </label>
-                    <NativeSelect
-                      id="edit-category"
-                      name="category"
-                      value={editForm.category}
-                      onChange={handleEditChange}
-                      className={dialogSelectClass}
-                    >
-                      {categories.map((item) => (
-                        <NativeSelectOption key={item} value={item}>
-                          {item}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="edit-jobType" className={dialogLabelClass}>
-                      Job type
-                    </label>
-                    <NativeSelect
-                      id="edit-jobType"
-                      name="jobType"
-                      value={editForm.jobType}
-                      onChange={handleEditChange}
-                      className={dialogSelectClass}
-                    >
-                      {jobTypes.map((item) => (
-                        <NativeSelectOption key={item} value={item}>
-                          {item}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0e0e10] px-3 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-zinc-200">
-                      Remote work allowed
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      Candidates can work from anywhere.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={editForm.remote}
-                    onCheckedChange={(checked) =>
-                      setEditForm({ ...editForm, remote: checked })
-                    }
-                    aria-label="Remote work allowed"
-                    className="data-checked:bg-[#7c5cfc] data-unchecked:bg-white/20"
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor="edit-location" className={dialogLabelClass}>
-                      Location
-                    </label>
-                    <Input
-                      id="edit-location"
-                      name="location"
-                      value={editForm.location}
-                      onChange={handleEditChange}
-                      required
-                      className={dialogInputClass}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="edit-deadline" className={dialogLabelClass}>
-                      Application deadline
-                    </label>
-                    <Input
-                      id="edit-deadline"
-                      name="deadline"
-                      type="date"
-                      value={editForm.deadline}
-                      onChange={handleEditChange}
-                      className={cn(dialogInputClass, "[color-scheme:dark]")}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="edit-minSalary"
-                      className={dialogLabelClass}
-                    >
-                      Min salary
-                    </label>
-                    <Input
-                      id="edit-minSalary"
-                      name="minSalary"
-                      value={editForm.minSalary}
-                      onChange={handleEditChange}
-                      inputMode="numeric"
-                      className={dialogInputClass}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="edit-maxSalary"
-                      className={dialogLabelClass}
-                    >
-                      Max salary
-                    </label>
-                    <Input
-                      id="edit-maxSalary"
-                      name="maxSalary"
-                      value={editForm.maxSalary}
-                      onChange={handleEditChange}
-                      inputMode="numeric"
-                      className={dialogInputClass}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="edit-frequency"
-                      className={dialogLabelClass}
-                    >
-                      Frequency
-                    </label>
-                    <NativeSelect
-                      id="edit-frequency"
-                      name="frequency"
-                      value={editForm.frequency}
-                      onChange={handleEditChange}
-                      className={dialogSelectClass}
-                    >
-                      {frequencies.map((item) => (
-                        <NativeSelectOption key={item} value={item}>
-                          {item}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="edit-responsibilities"
-                    className={dialogLabelClass}
-                  >
-                    Key responsibilities
-                  </label>
-                  <Textarea
-                    id="edit-responsibilities"
-                    name="responsibilities"
-                    value={editForm.responsibilities}
-                    onChange={handleEditChange}
-                    className={dialogTextareaClass}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="edit-qualifications"
-                    className={dialogLabelClass}
-                  >
-                    Qualifications &amp; requirements
-                  </label>
-                  <Textarea
-                    id="edit-qualifications"
-                    name="qualifications"
-                    value={editForm.qualifications}
-                    onChange={handleEditChange}
-                    className={dialogTextareaClass}
-                  />
-                </div>
-
-                <div className="flex flex-col-reverse gap-2 border-t border-white/10 pt-4 sm:flex-row sm:justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setEditingJob(null)}
-                    className="h-9 border-white/10 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-white"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="h-9 rounded-xl bg-[#7c5cfc] px-4 text-white hover:bg-[#6a4bee]"
-                  >
-                    Save changes
-                  </Button>
-                </div>
-              </form>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
