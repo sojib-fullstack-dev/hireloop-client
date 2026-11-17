@@ -8,7 +8,10 @@ export const createJobs = async (data: JobForm) => {
     headers: {
       "content-type": "application/json",
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      ...data,
+      postedAt: new Date().toISOString(),
+    }),
   })
   return res.json()
 }

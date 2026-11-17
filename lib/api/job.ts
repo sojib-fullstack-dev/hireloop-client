@@ -2,30 +2,29 @@ import type { JobEntry } from "@/app/dashbord/recruiter/jobs/job-data"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
 
-// What the API sends back. MongoDB uses "_id" instead of "id".
-type ApiJob = Omit<JobEntry, "id" | "postedAt"> & {
-  _id: string
+// The API may not send every field, so postedAt is optional here.
+type ApiJob = Omit<JobEntry, "postedAt"> & {
   postedAt?: string
+  createdAt?: string
+  created_at?: string
 }
 
-export const getJobsdata = async () => {
-  const res = await fetch(`${BASE_URL}/jobs`)
+  //get jobs 
+export const getJobsdata = async (query:string='') => {
+  const res = await fetch(`${BASE_URL}/jobs?${query}`)
   const data: ApiJob[] = await res.json()
 
-  // The table needs "id", so we copy "_id" into it.
   return data.map((job) => ({
     ...job,
-    id: job._id,
-    postedAt: job.postedAt ?? "",
+    postedAt: job.postedAt || job.createdAt || job.created_at || "",
   }))
 }
 
-// delete job 
+// delete job
 
-export const deleteJob=async(_id: string)=>{
-
-  const res=await fetch(`${BASE_URL}/jobs/${_id}`,{
-    method:'DELETE'
-  });
+export const deleteJob = async (_id: string) => {
+  const res = await fetch(`${BASE_URL}/jobs/${_id}`, {
+    method: "DELETE",
+  })
   return res.json()
 }

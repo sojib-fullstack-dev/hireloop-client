@@ -1,5 +1,8 @@
-'use client'
+"use client"
+
+import { useState } from "react"
 import { Trash2Icon } from "lucide-react"
+import { toast } from "react-toastify"
 
 import {
   AlertDialog,
@@ -14,22 +17,47 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { JobEntry } from "@/app/dashbord/recruiter/jobs/job-data"
+import type { JobEntry } from "@/app/dashbord/recruiter/jobs/job-data"
 import { deleteJob } from "@/lib/api/job"
 
-export function AlertDialogDestructive({job}:{job:JobEntry}) {
+type AlertDialogDestructiveProps = {
+  job: JobEntry
+  // Page ke bolbe row ta table theke soraite
+  onDeleted: (job: JobEntry) => void
+}
 
-  const handleDelet= async()=>{
-    
-        const res=await deleteJob(job._id)
+export function AlertDialogDestructive({
+  job,
+  onDeleted,
+}: AlertDialogDestructiveProps) {
+  const [open, setOpen] = useState(false)
 
-          console.log(job._id,res)
+  async function handleDelete() {
+    try {
+      const res = await deleteJob(job._id)
+
+      if (!res.deletedCount) {
+        toast.error("Delete failed")
+        return
+      }
+
+      setOpen(false)
+      toast.success("Delete Success")
+      onDeleted(job)
+    } catch (err) {
+      console.log("Failed to delete job:", err)
+      toast.error("Something went wrong")
+    }
   }
 
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger
-        render={<Button variant="destructive"><Trash2Icon /></Button>}
+        render={
+          <Button variant="destructive" aria-label={`Delete ${job.title}`}>
+            <Trash2Icon />
+          </Button>
+        }
       />
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
@@ -43,7 +71,9 @@ export function AlertDialogDestructive({job}:{job:JobEntry}) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel variant="outline">Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={handleDelet}>Delete</AlertDialogAction>
+          <AlertDialogAction variant="destructive" onClick={handleDelete}>
+            Delete
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

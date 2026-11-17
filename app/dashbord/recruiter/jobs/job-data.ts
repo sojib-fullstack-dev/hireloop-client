@@ -79,17 +79,32 @@ const monthNames = [
   "Dec",
 ]
 
-// Format an ISO date (yyyy-mm-dd) without relying on the user's locale,
+// Format a date (ISO string or yyyy-mm-dd) without relying on the user's locale,
 // so the server and the browser always render the same text.
 export function formatDate(value: string) {
   if (!value) return "—"
 
-  const [year, month, day] = value.split("-")
-  const monthName = monthNames[Number(month) - 1]
+  // Handle ISO strings (e.g. 2026-11-15T...) or YYYY-MM-DD
+  const datePart = value.includes("T") ? value.split("T")[0] : value.slice(0, 10)
+  const parts = datePart.split("-")
 
-  if (!year || !monthName || !day) return value
+  if (parts.length === 3) {
+    const [year, month, day] = parts
+    const monthIndex = Number(month) - 1
+    const monthName = monthNames[monthIndex]
+    const parsedDay = parseInt(day, 10)
 
-  return `${monthName} ${Number(day)}, ${year}`
+    if (year && monthName && !isNaN(parsedDay)) {
+      return `${monthName} ${parsedDay}, ${year}`
+    }
+  }
+
+  const dateObj = new Date(value)
+  if (!isNaN(dateObj.getTime())) {
+    return `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`
+  }
+
+  return value
 }
 
 function formatMoney(value: string) {

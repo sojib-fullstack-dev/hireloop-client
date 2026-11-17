@@ -4,7 +4,7 @@ import "./globals.css"
 import { Navbar } from "@/components/navbar"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
-  import { ToastContainer } from 'react-toastify';
+import { ToastContainer } from "react-toastify"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -34,7 +34,7 @@ export default function RootLayout({
           <Navbar />
           {children}
         </ThemeProvider>
-        <ToastContainer />
+        <ToastContainer position="top-center" autoClose={2000} theme="dark" />
       </body>
     </html>
   )

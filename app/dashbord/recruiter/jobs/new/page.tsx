@@ -26,7 +26,7 @@ import {
   type JobForm,
 } from "@/app/dashbord/recruiter/jobs/job-data"
 import { toast } from "react-toastify"
-
+import { useRouter } from "next/navigation"
 
 // Shared styles so every input looks the same.
 const inputClass =
@@ -47,6 +47,7 @@ const iconClass =
 const NewJobPage = () => {
   const [formData, setFormData] = useState<JobForm>(initialJobForm)
   const [submitted, setSubmitted] = useState(false)
+  const router = useRouter()
 
   function handleChange(
     event: ChangeEvent<
@@ -65,9 +66,14 @@ const NewJobPage = () => {
     // Bring the confirmation message into view for users who submitted
     // from the bottom of the form.
     window.scrollTo({ top: 0, behavior: "smooth" })
-    toast.success('Job Post Successfully')
+
     const result = await createJobs(formData)
-    console.log("submit data", result)
+
+    if (result.insertedId) {
+      toast.success("Job Post Successfully")
+      // console.log("submit data", result)
+      router.push("/dashbord/recruiter/jobs")
+    }
   }
 
   return (
@@ -97,14 +103,7 @@ const NewJobPage = () => {
           </div>
         </div>
 
-        {submitted && (
-          <div
-            role="status"
-            className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"
-          >
-            Job published. Check the browser console for the collected data.
-          </div>
-        )}
+
 
         {/* 1. Basic Information */}
         <section className="mt-8 space-y-4">

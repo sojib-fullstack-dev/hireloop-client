@@ -39,7 +39,7 @@ import { getJobsdata } from "@/lib/api/job"
 
 type StatusFilter = "all" | JobStatus
 
-const ManageJobs =() => {
+const ManageJobs = () => {
   const [jobs, setJobs] = useState<JobEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -85,10 +85,8 @@ const ManageJobs =() => {
     setStatus("all")
   }
 
-  function updateJob(updatedJob: JobEntry) {
-    setJobs((current) =>
-      current.map((job) => (job._id === updatedJob._id ? updatedJob : job))
-    )
+  function removeJob(job: JobEntry) {
+    setJobs((current) => current.filter((item) => item._id !== job._id))
   }
 
   const stats = [
@@ -402,8 +400,11 @@ const ManageJobs =() => {
                         <TableCell className="px-4 py-3">
                           <div className="flex items-center justify-end gap-1">
                             <ViewAction job={job} />
-                            <EditAction job={job} onSave={updateJob} />
-                            <AlertDialogDestructive job={job} />
+                            <EditAction job={job} />
+                            <AlertDialogDestructive
+                              job={job}
+                              onDeleted={removeJob}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -489,8 +490,8 @@ const ManageJobs =() => {
 
                     <div className="mt-4 flex items-center justify-end gap-1">
                       <ViewAction job={job} showLabel />
-                      <EditAction job={job} showLabel onSave={updateJob} />
-                      <AlertDialogDestructive job={job} />
+                      <EditAction job={job} showLabel />
+                      <AlertDialogDestructive job={job} onDeleted={removeJob} />
                     </div>
                   </article>
                 )
