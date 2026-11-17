@@ -9,8 +9,8 @@ type ApiJob = Omit<JobEntry, "postedAt"> & {
   created_at?: string
 }
 
-  //get jobs 
-export const getJobsdata = async (query:string='') => {
+//get jobs
+export const getJobsdata = async (query: string = "") => {
   const res = await fetch(`${BASE_URL}/jobs?${query}`)
   const data: ApiJob[] = await res.json()
 
@@ -18,6 +18,14 @@ export const getJobsdata = async (query:string='') => {
     ...job,
     postedAt: job.postedAt || job.createdAt || job.created_at || "",
   }))
+}
+
+// Get one job by id.
+// Backend e ekhon GET /jobs/:id nei — tai sob job niye search korchi.
+// Backend e oi route add korle sudhu fetch(`${BASE_URL}/jobs/${_id}`) kore diben.
+export const getJobById = async (_id: string) => {
+  const jobs = await getJobsdata()
+  return jobs.find((job) => job._id === _id) ?? null
 }
 
 // delete job

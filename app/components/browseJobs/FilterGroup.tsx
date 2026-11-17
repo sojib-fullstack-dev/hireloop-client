@@ -1,35 +1,47 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ChangeEvent } from "react"
 
 import { Checkbox } from "@/components/ui/checkbox"
 
 type FilterGroupProps = {
   title: string
+  name: string
   options: string[]
-  // "single" hole ekbar e ekta option select kora jabe (radio er moto)
   single?: boolean
+
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void
 }
 
 // One checkbox group inside the Filters sidebar (e.g. "Job Type").
 // The selection is kept in local state only — applying it to the
 // search query will be added later.
-export function FilterGroup({ title, options, single }: FilterGroupProps) {
+export function FilterGroup({
+  title,
+  name,
+  options,
+  single,
+  onChange,
+}: FilterGroupProps) {
   const [selected, setSelected] = useState<string[]>([])
 
   function toggleOption(option: string) {
+    let next: string[]
+
     if (single) {
-      // Single select: notun option ta ekta-i selected thakbe
-      setSelected([option])
+      // Single select: age theke select ache → unselect, na hole → select
+      next = selected.includes(option) ? [] : [option]
+    } else if (selected.includes(option)) {
+      next = selected.filter((item) => item !== option)
     } else {
-      // Multi select: notun hole add, age theke thakle sorao
-      setSelected((current) =>
-        current.includes(option)
-          ? current.filter((item) => item !== option)
-          : [...current, option]
-      )
+      next = [...selected, option]
     }
-    // TODO: apply the selected options to the search query
+
+    setSelected(next)
+
+    onChange?.({
+      target: { name, value: option, checked: next.includes(option) },
+    } as ChangeEvent<HTMLInputElement>)
   }
 
   return (
@@ -40,6 +52,7 @@ export function FilterGroup({ title, options, single }: FilterGroupProps) {
         {options.map((option) => (
           <div key={option} className="flex items-center gap-3 py-1.5">
             <Checkbox
+              name={name}
               checked={selected.includes(option)}
               onCheckedChange={() => toggleOption(option)}
               aria-label={option}
