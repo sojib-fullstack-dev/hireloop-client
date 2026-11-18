@@ -2,10 +2,12 @@ import Link from "next/link"
 import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from "lucide-react"
 
 import {
-  dummyApplications,
   type ApplicationEntry,
   type ApplicationStatus,
 } from "./application-data"
+import { getApplications } from "@/lib/api/applications"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 
 // "2 hours ago" style text (Figma: Applied column)
 function timeAgo(iso: string) {
@@ -106,7 +108,18 @@ function ApplicationRow({ app }: { app: ApplicationEntry }) {
   )
 }
 
-const SeekerApplicationsPage = () => {
+const SeekerApplicationsPage = async () => {
+  // Login user er session paoa (server component e eta-i standard way)
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  const user = session?.user
+
+  // Backend theke nijer application ano (login na hole khali list)
+  const rows: ApplicationEntry[] = user
+    ? await getApplications(user.id).catch(() => [])
+    : []
+
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 lg:px-8">
       {/* Header: title + Active/Archived + Export PDF (Figma: Header Section) */}
@@ -169,8 +182,8 @@ const SeekerApplicationsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {dummyApplications.map((app) => (
-                <ApplicationRow key={app.jobId} app={app} />
+              {rows.map((app) => (
+                <ApplicationRow key={app._id ?? app.jobId} app={app} />
               ))}
             </tbody>
           </table>
@@ -179,7 +192,7 @@ const SeekerApplicationsPage = () => {
         {/* Pagination (Figma: Pagination bar) — TODO: page er kaj apni nijei korben */}
         <div className="flex flex-col items-center justify-between gap-3 border-t border-white/10 bg-[#1a1a1f] px-4 py-4 sm:flex-row">
           <p className="text-sm text-[#a0a0ab]">
-            Showing 1-{dummyApplications.length} of 24 applications
+            Showing 1-{rows.length} of {rows.length} applications
           </p>
           <div className="flex items-center gap-2">
             <button

@@ -13,3 +13,13 @@ export async function applyJobs(data: ApplicationEntry) {
   })
   return res.json()
 }
+
+// Sob application load koro (backend: GET /applications)
+// TODO: ?userId= diye pore nijer application bar bar filter koro
+
+export async function getApplications(
+  userId: string
+): Promise<ApplicationEntry[]> {
+  const res = await fetch(`${BASE_URL}/applications?userId=${userId}`)
+  return res.json()
+}
