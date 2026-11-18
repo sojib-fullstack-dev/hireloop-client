@@ -1,3 +1,4 @@
+
 import Link from "next/link"
 import {
   BanknoteIcon,
@@ -9,7 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { getJobById } from "@/lib/api/job"
+import { getJobDetails } from "@/lib/api/job"
 import {
   formatDate,
   formatSalary,
@@ -17,13 +18,14 @@ import {
 } from "@/app/dashbord/recruiter/jobs/job-data"
 
 
+import ApplyButton from "@/app/components/browseJobs/ApplyButton"
+
 function splitLines(text: string | undefined) {
   return (text ?? "")
     .split("\n")
     .map((line) => line.replace(/^[-•]\s*/, "").trim())
     .filter(Boolean)
 }
-
 
 function InfoCard({
   icon: Icon,
@@ -75,8 +77,9 @@ type JobDetailsPageProps = {
 const JobDetailsPage = async ({ params }: JobDetailsPageProps) => {
   const { id } = await params
 
+  const job: JobEntry | null = await getJobDetails(id)
 
-  const job: JobEntry | null = await getJobById(id).catch(() => null)
+
 
   if (!job) {
     return (
@@ -134,13 +137,8 @@ const JobDetailsPage = async ({ params }: JobDetailsPageProps) => {
               >
                 <BookmarkIcon className="size-4" />
               </button>
-              {/* TODO: apply flow apni nijei korben */}
-              <button
-                type="button"
-                className="h-12 rounded-lg bg-[#fafafa] px-5 text-base font-medium text-[#0b0b0c] transition-colors hover:bg-white"
-              >
-                Apply Now
-              </button>
+           
+                <ApplyButton job={job}/>
             </div>
           </div>
         </section>
@@ -179,7 +177,6 @@ const JobDetailsPage = async ({ params }: JobDetailsPageProps) => {
                 <h3 className="text-xl font-semibold">Requirements</h3>
                 <BulletList text={job.qualifications} />
               </section>
-
             </div>
           </div>
 

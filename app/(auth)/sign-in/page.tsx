@@ -13,10 +13,15 @@ import {
 
 import { FcGoogle } from "react-icons/fc";
 import { authClient } from "@/lib/auth-client";
+import { useSearchParams } from "next/navigation";
 
 export default function SignInPage() {
   const [message, setMessage] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+
+  const searchParams=useSearchParams()
+  const redirectTo=searchParams.get('redirectTo') ?? '/'
+  console.log(redirectTo)
 
  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -28,7 +33,7 @@ export default function SignInPage() {
    email:data.email as string, 
     password:data.password as string, 
     rememberMe: true,
-    callbackURL: "/", 
+    callbackURL: redirectTo, 
         });
 
     console.log("Sign-in form data:", data)

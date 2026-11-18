@@ -36,7 +36,7 @@ export function Navbar() {
   }
 
   const navLinks = [
-  { label: "Browse Jobs", href: "/jobs", active: false },
+  { label: "Browse Jobs", href: "/browse-jobs", active: false },
   { label: "Company", href: "/company", active: false },
   { label: "Pricing", href: "/pricing", active: false },
   { label: "Dashboard", href: `/dashbord/${session?.user.role || 'seeker'}` },

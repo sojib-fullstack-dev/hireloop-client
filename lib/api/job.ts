@@ -20,16 +20,25 @@ export const getJobsdata = async (query: string = "") => {
   }))
 }
 
-// Get one job by id.
-// Backend e ekhon GET /jobs/:id nei — tai sob job niye search korchi.
-// Backend e oi route add korle sudhu fetch(`${BASE_URL}/jobs/${_id}`) kore diben.
-export const getJobById = async (_id: string) => {
-  const jobs = await getJobsdata()
-  return jobs.find((job) => job._id === _id) ?? null
+// job details
+export const getJobDetails = async (_id: string) => {
+  try {
+    const res = await fetch(`${BASE_URL}/jobs/${_id}`, {
+      cache: "no-store",
+    })
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch job details")
+    }
+
+    return await res.json()
+  } catch (error) {
+    console.error("Error fetching job details:", error)
+    return null
+  }
 }
 
 // delete job
-
 export const deleteJob = async (_id: string) => {
   const res = await fetch(`${BASE_URL}/jobs/${_id}`, {
     method: "DELETE",
